@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <form id="uploadForm" enctype="multipart/form-data" method="POST">
+        <input type="file" name="file" id="fileInput">
+        <input type="submit" name="submit" value="Upload" />
+    </form>
+    <div id="uploadStatus"></div>
+    <script>
+        $(document).ready(function () {
+            $('#uploadForm').submit(function (e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+                formData.append("submit", "")
+                console.log(formData)
+                $.ajax({
+                    url: "fileupload.php",
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    contentType: false,
+                    processData: false,
+                    beforeSend: function () {
+                        $('#uploadStatus').html('Uploading...');
+                    },
+                    success: function (response) {
+                        $('#uploadStatus').html(response.message);
+                        if (response.message.includes("success")) {
+                            $("#uploadForm")[0].reset();
+                        }
+                    },
+                    error: function () {
+                        $('#uploadStatus').html("Error");
+                    }
+                });
+            });
+        });
+
+    </script>
+</body>
+
+</html>
+
+
+
+<?php
+if (isset($_POST['submit'])) {
+
+  if (isset($_FILES['file'])) {
+    $filename = $_FILES['file']['name'];
+    $size = $_FILES['file']['size'];
+    $basename = basename($filename);
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $newfilename = md5($basename) . rand(1000, 9999) . time() . "." . $ext;
+
+    $allowedTypes = array('jpg', 'jpeg', 'png');
+
+    if (!in_array($ext, $allowedTypes)) {
+      $response['message'] = 'Invalid file type. Only ' . implode(", ", $allowedTypes) . ' files are allowed.';
+    } else if ($size > 2000000) {
+      $response['message'] = 'Please Only Upload File Upto 2MB.';
+    } else if (in_array($ext, $allowedTypes) && $size < 2000000) {
+      if (move_uploaded_file($_FILES['file']['tmp_name'], "uploads/" . $newfilename)) {
+        $response['message'] = 'File uploaded successfully.';
+      } else {
+        $response['message'] = 'Failed to upload the file.';
+      }
+    }
+  } else {
+    $response['message'] = 'No file selected.';
+  }
+
+  echo json_encode($response);
+}
+?>
