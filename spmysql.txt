@@ -1,0 +1,77 @@
+DELIMITER //
+CREATE PROCEDURE InsertAdmin(IN p_Username VARCHAR(255), IN p_Email VARCHAR(255), IN p_Password VARCHAR(255))
+BEGIN
+  INSERT INTO AdminMaster (Username, Email, Password, CreatedAt, UpdatedAt)
+  VALUES (p_Username, p_Email, p_Password, NOW(), NOW());
+END //
+DELIMITER ;
+
+
+DELIMITER //
+CREATE PROCEDURE UpdateAdmin(IN p_AdminID INT, IN p_Username VARCHAR(255), IN p_Email VARCHAR(255), IN p_Password VARCHAR(255))
+BEGIN
+  UPDATE AdminMaster
+  SET Username = p_Username, Email = p_Email, Password = p_Password, UpdatedAt = NOW()
+  WHERE AdminID = p_AdminID;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE DeleteAdmin(IN p_AdminID INT)
+BEGIN
+  DELETE FROM AdminMaster WHERE AdminID = p_AdminID;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE GetAdmin(IN p_AdminID INT)
+BEGIN
+  SELECT * FROM AdminMaster WHERE AdminID = p_AdminID;
+END //
+DELIMITER ;
+
+
+$mysqli = mysqli_connect("localhost", "username", "password", "database");
+
+// Check connection
+if (!$mysqli) {
+    echo "Failed to connect to MySQL: " . mysqli_connect_error();
+    exit();
+}
+
+// Call InsertAdmin stored procedure
+$username = "John";
+$email = "john@example.com";
+$password = "password";
+
+mysqli_query($mysqli, "CALL InsertAdmin('$username', '$email', '$password')");
+
+// Call UpdateAdmin stored procedure
+$adminID = 1;
+$newUsername = "New John";
+$newEmail = "newjohn@example.com";
+$newPassword = "newpassword";
+
+mysqli_query($mysqli, "CALL UpdateAdmin($adminID, '$newUsername', '$newEmail', '$newPassword')");
+
+// Call DeleteAdmin stored procedure
+$adminID = 2;
+
+mysqli_query($mysqli, "CALL DeleteAdmin($adminID)");
+
+// Call GetAdmin stored procedure
+$adminID = 3;
+
+$result = mysqli_query($mysqli, "CALL GetAdmin($adminID)");
+
+// Fetch the result
+if ($row = mysqli_fetch_assoc($result)) {
+    echo "AdminID: " . $row['AdminID'] . "<br>";
+    echo "Username: " . $row['Username'] . "<br>";
+    echo "Email: " . $row['Email'] . "<br>";
+}
+
+// Free the result
+mysqli_free_result($result);
+
+mysqli_close($mysqli);
