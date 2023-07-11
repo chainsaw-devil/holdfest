@@ -44,7 +44,10 @@ $username = "John";
 $email = "john@example.com";
 $password = "password";
 
-mysqli_query($mysqli, "CALL InsertAdmin('$username', '$email', '$password')");
+$stmt = mysqli_prepare($mysqli, "CALL InsertAdmin(?, ?, ?)");
+mysqli_stmt_bind_param($stmt, "sss", $username, $email, $password);
+mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
 
 // Call UpdateAdmin stored procedure
 $adminID = 1;
@@ -52,20 +55,29 @@ $newUsername = "New John";
 $newEmail = "newjohn@example.com";
 $newPassword = "newpassword";
 
-mysqli_query($mysqli, "CALL UpdateAdmin($adminID, '$newUsername', '$newEmail', '$newPassword')");
+$stmt = mysqli_prepare($mysqli, "CALL UpdateAdmin(?, ?, ?, ?)");
+mysqli_stmt_bind_param($stmt, "isss", $adminID, $newUsername, $newEmail, $newPassword);
+mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
 
 // Call DeleteAdmin stored procedure
 $adminID = 2;
 
-mysqli_query($mysqli, "CALL DeleteAdmin($adminID)");
+$stmt = mysqli_prepare($mysqli, "CALL DeleteAdmin(?)");
+mysqli_stmt_bind_param($stmt, "i", $adminID);
+mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
 
 // Call GetAdmin stored procedure
 $adminID = 3;
 
-$result = mysqli_query($mysqli, "CALL GetAdmin($adminID)");
+$stmt = mysqli_prepare($mysqli, "CALL GetAdmin(?)");
+mysqli_stmt_bind_param($stmt, "i", $adminID);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 
 // Fetch the result
-if ($row = mysqli_fetch_assoc($result)) {
+while ($row = mysqli_fetch_assoc($result)) {
     echo "AdminID: " . $row['AdminID'] . "<br>";
     echo "Username: " . $row['Username'] . "<br>";
     echo "Email: " . $row['Email'] . "<br>";
@@ -73,5 +85,6 @@ if ($row = mysqli_fetch_assoc($result)) {
 
 // Free the result
 mysqli_free_result($result);
+mysqli_stmt_close($stmt);
 
 mysqli_close($mysqli);
